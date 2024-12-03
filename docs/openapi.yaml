@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: AI求人情報生成システム API
+  description: |
+    企業サイトから魅力的な求人情報を自動生成し、検索エンジン最適化された採用ページを作成するためのAPI仕様です。
+    
+    主な機能：
+    - 企業サイトURLからAIによる求人情報の自動生成
+    - 生成された求人情報の保存と取得
+    - スキーママークアップの自動生成
+  version: 1.0.0
+  contact:
+    name: 開発チーム
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: 本番環境
+  - url: https://staging-api.example.com/v1
+    description: ステージング環境
+  - url: http://localhost:3000
+    description: 開発環境
+
+paths:
+  /api/generate:
+    post:
+      summary: 求人情報の生成
+      description: 企業サイトのURLから求人情報を自動生成します
+      operationId: generateJobPosting
+      tags:
+        - 求人情報
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: 企業サイトのURL
+                  example: https://example.com
+      responses:
+        '200':
+          description: 求人情報の生成に成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPostingResponse'
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/job-postings:
+    get:
+      summary: 求人情報一覧の取得
+      description: 保存されている全ての求人情報を取得します
+      operationId: getAllJobPostings
+      tags:
+        - 求人情報
+      responses:
+        '200':
+          description: 求人情報一覧の取得に成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JobPosting'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/job-postings/{id}:
+    get:
+      summary: 求人情報の取得
+      description: 指定されたIDの求人情報を取得します
+      operationId: getJobPosting
+      tags:
+        - 求人情報
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 求人情報のID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 求人情報の取得に成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPostingResponse'
+        '404':
+          description: 求人情報が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    JobPosting:
+      type: object
+      required:
+        - id
+        - companyUrl
+        - title
+        - description
+        - requirements
+        - benefits
+        - location
+        - employmentType
+        - experience
+        - skills
+        - responsibilities
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 求人情報のID
+          example: 1
+        companyUrl:
+          type: string
+          format: uri
+          description: 企業サイトのURL
+          example: https://example.com
+        title:
+          type: string
+          description: 職種名
+          example: シニアフロントエンドエンジニア
+        description:
+          type: string
+          description: 仕事内容の詳細
+          example: 当社のプロダクト開発チームの中核として、フロントエンド開発をリードしていただきます。
+        requirements:
+          type: string
+          description: 応募要件
+          example: React、TypeScript、Next.jsでの開発経験3年以上
+        benefits:
+          type: string
+          description: 福利厚生
+          example: 各種社会保険完備、交通費支給、在宅勤務可
+        location:
+          type: string
+          description: 勤務地
+          example: 東京都渋谷区
+        salary:
+          type: string
+          nullable: true
+          description: 給与
+          example: 年収600万円〜1000万円
+        employmentType:
+          type: string
+          description: 雇用形態
+          example: 正社員
+        experience:
+          type: string
+          description: 必要経験
+          example: Web開発経験5年以上
+        education:
+          type: string
+          nullable: true
+          description: 学歴要件
+          example: 不問
+        skills:
+          type: string
+          description: 必要なスキル
+          example: React、TypeScript、Next.js、GraphQL
+        responsibilities:
+          type: string
+          description: 職務内容
+          example: フロントエンド開発のリード、技術選定、コードレビュー
+        department:
+          type: string
+          nullable: true
+          description: 所属部門
+          example: 開発部
+        contactInfo:
+          type: string
+          nullable: true
+          description: 応募方法
+          example: 企業サイトよりご応募ください
+        applicationDeadline:
+          type: string
+          nullable: true
+          description: 応募締切日
+          example: 2024-12-31
+        createdAt:
+          type: integer
+          format: int64
+          description: 作成日時（UNIXタイムスタンプ）
+          example: 1679900000000
+        updatedAt:
+          type: integer
+          format: int64
+          description: 更新日時（UNIXタイムスタンプ）
+          example: 1679900000000
+
+    JobPostingResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/JobPosting'
+        message:
+          type: string
+          example: 求人情報の生成が完了しました
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: AIによる求人情報の生成に失敗しました
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API認証キー
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: 求人情報
+    description: 求人情報の生成と管理に関するエンドポイント
